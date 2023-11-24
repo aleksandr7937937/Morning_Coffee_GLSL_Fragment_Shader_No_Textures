@@ -1,7 +1,7 @@
 # Morning_Coffee_GLSL_Fragment_Shader_No_Textures
 
 - This is pure GLSL Fragment shader
-- No need in Textures. The whole scene is calculated and drawn only via code/math
+- No need for Textures. The whole scene is calculated and drawn only via code/math
 - No AI/Third party tools used whatsoever
 - Written by Aleksandr Pogosov
 - 2023 All rights reserved

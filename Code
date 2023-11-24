@@ -1,0 +1,197 @@
+// Written by Aleksandr Pogosov,
+// 2023 All rights reserved
+// aleksandr7937937@gmail.com
+// Originally written by me on Android (GLES) via Shader Editor application
+
+vec2  pos[17];
+float size[17];
+
+vec2 rotate(vec2 p, float angle)
+{
+	return p* mat2 (
+		cos(angle), - sin(angle),
+		sin(angle), cos(angle)
+		);
+}
+
+float sd_circle(vec2 point,
+	float radius)
+{
+	return length(point)-radius;
+}
+
+vec3 table(vec2 uv, out float ratio)
+{
+	uv.y*=6.;
+	ratio = 0.0;
+	float line = fract(uv.y);
+	if(line > 0.0 && line < 0.2)
+	return vec3(0.0);
+
+	return vec3(0.4,0.25,0.1);
+}
+
+vec3 coffe(vec2 uv, out float ratio)
+{
+	ratio = sd_circle(uv,0.15);
+	ratio*=5.;
+	if(ratio>=0.)ratio = 1.0;
+	return vec3(0.3,0.2,0.0);
+}
+
+vec3 cup(vec2 uv, out float ratio)
+{
+	ratio =sd_circle(uv, 0.17);
+	ratio = step(0., ratio);
+	return vec3(0.8);
+}
+
+vec3 handle(vec2 uv, out float ratio)
+{
+	uv.y*=2.;
+	uv-= vec2(0.2,0.0);
+	ratio = max(abs(uv.x),abs(uv.y))-0.05 ;
+	ratio = step(0.0, ratio);
+	return vec3(0.75);
+
+}
+
+vec3 plate(vec2 point, out float ratio)
+{
+	ratio =sd_circle(point, 0.3);
+	float col = 0.7;
+	if(ratio>0.0)
+	{
+		ratio =1.;
+		return vec3(col);
+	}
+	else if(ratio <0.0)
+	{
+
+		col+= ratio;
+		ratio =0.0;
+		return vec3(col);
+		}
+}
+
+vec3 foam(vec2 p,out float ratio)
+{
+	int i=0;
+	pos[i++]= vec2(0.14,0.008);
+	pos[i++]= vec2(0.14,0.015);
+	pos[i++]= vec2(0.13,0.02);
+	pos[i++]= vec2(0.14,0.025);
+    pos[i++]= vec2(0.13,0.03);
+
+	pos[i++]= vec2(0.12,0.01);
+	pos[i++]= vec2(0.12,0.03);
+	pos[i++]= vec2(0.135,0.035);
+	pos[i++]= vec2(0.135,0.045);
+	pos[i++]= vec2(0.12,0.045);
+
+	pos[i++]= vec2(0.13,0.055);
+	pos[i++]= vec2(0.12,0.06);
+	pos[i++]= vec2(0.11,0.07);
+	pos[i++]= vec2(0.08,0.02);
+	pos[i++]= vec2(0.08,0.04);
+	pos[i++]= vec2(0.09,0.09);
+
+	pos[i++]= vec2(0.0,0.08);
+
+	int s=0;
+	size[s++]=0.005;
+	size[s++]= 0.003;
+	size[s++]=0.002;
+	size[s++]=0.003;
+	size[s++]=0.001;
+
+	size[s++]= 0.003;
+	size[s++]=0.005;
+	size[s++]=0.002;
+	size[s++]=0.004;
+	size[s++]= 0.003;
+
+	size[s++]=0.002;
+	size[s++]= 0.003;
+	size[s++]=0.002;
+	size[s++]=0.003;
+	size[s++]=0.002;
+	size[s++]=0.004;
+
+    vec2 rotateP = rotate(p, iTime/5.0);
+	for( int a =0; a <15; a++)
+	{
+
+		float sd = sd_circle(rotateP + pos[a],size[a]);
+	  if(sd>=0.0&& sd<=size[a]+0.001)
+	  {
+	  	ratio = sd;
+	  	return vec3(0.7,0.6,0.4);
+	  }
+	}
+	ratio = 1.0;
+	return vec3(0.7,0.6,0.4);
+}
+
+vec3 steam(vec2 p, out float ratio)
+{
+	ratio = 1.0;
+	vec2 p_Sq = rotate(p, 1.0);
+	p_Sq.x +=0.3;
+	p_Sq.x *=0.5;
+	p_Sq.y *= 0.3;
+	float sdSquare= max(abs(p_Sq.x), abs(p_Sq.y));
+	sdSquare-= 0.05;
+	if(sdSquare >0.1) sdSquare= 1.0;
+	else sdSquare=0.8;
+
+	float cosTime = (cos(iTime)+1.)/2.;
+	float offset_1 = cosTime *0.01;
+	float cosTime_new = (cosTime+1.)*2.;
+	vec2 cir_1_Offset = vec2(0.322+offset_1,-0.3975);
+	vec2 cir_2_Offset = vec2(0.157+offset_1,-0.34);
+	vec2 cir_3_Offset = vec2(-0.25+offset_1,-0.15);
+	vec2 cir_4_Offset = vec2(-0.05+offset_1,-0.15);
+
+    float circle_1 = sd_circle(
+        p+ cir_1_Offset, 0.3);
+    float circle_2 = sd_circle(
+        p+ cir_2_Offset, 0.15);
+    float circle_3 = sd_circle(
+        p+ cir_3_Offset, 0.3);
+    float circle_4 = sd_circle(
+        p+ cir_4_Offset, 0.15);
+
+    if(circle_1 >0.0&& circle_2<=0.0)
+        ratio = sdSquare;
+    if(circle_3 > 0.0&&circle_4 <=0.0)
+        ratio = sdSquare;
+
+	return vec3(1.0);
+
+}
+
+
+
+void mainImage( out vec4 fragColor, in vec2 fragCoord )
+{
+
+	vec2 uv = fragCoord.xy / iResolution.xy;
+
+	uv = uv*2.-1.;
+	uv.x*=iResolution.x/iResolution.y;
+    uv*=0.5;
+	vec3 col = vec3(0.3,0.7,0.8);
+
+	float ratio=0.;
+	col = mix(table(uv,ratio), col, ratio);
+	col = mix(plate(uv,ratio), col, ratio);
+	col = mix(handle(uv, ratio),col, ratio);
+	col = mix(cup(uv,ratio), col, ratio);
+    col = mix(coffe(uv, ratio),col, ratio);
+	col = mix(foam(uv,ratio),col,ratio);
+	col = mix(steam(uv,ratio),col,ratio);
+
+	fragColor = vec4(col,1.0);
+
+}
